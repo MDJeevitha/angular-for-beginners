@@ -10,7 +10,7 @@ export class AuthService {
   constructor(private http : HttpClient) { }
 
 
-  //creating services
+  //creating our services
   signUp(userObj:any){
       return this.http.post<any>(`${this.baseUrl}/user/register`, userObj)
   }
