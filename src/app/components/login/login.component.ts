@@ -3,6 +3,7 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import ValidateForm from '../../helpers/validateform';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-login',
@@ -20,7 +21,9 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder, 
     private auth: AuthService,
     private router: Router,
+    private toastr: ToastrService
   
+
     ) { }
 
   ngOnInit(): void { 
@@ -36,20 +39,22 @@ export class LoginComponent implements OnInit {
     this.isText ? this.type = "text" : this.type = "password";
    }
 
-   onSubmit() {
+   onLogin() {
     if (this.loginForm.valid) {
-      console.log(this.loginForm.value);
+      //console.log(this.loginForm.value);
       
       // Send the object to database
       this.auth.login(this.loginForm.value).subscribe({
         next: (res) => {
-          console.log(res.message);
+          //console.log(res.message);
+          this.toastr.success(res.message);
           this.loginForm.reset();
           this.router.navigate(['dashboard']);
         },
         error: (err) => {
-           alert("Something went wrong!");
-          console.log(err);
+           //alert("Something went wrong!");
+          //console.log(err);
+          this.toastr.error(err?.error.message);
         },
       });
     }else{
@@ -57,7 +62,7 @@ export class LoginComponent implements OnInit {
       // console.log("Form is not valid"); previously it was there
          
       ValidateForm.validateAllFormFields(this.loginForm);
-      alert("Your form is not valid");
+      this.toastr.error("Your form is not valid");
       // throw the error using toaster and with required fields.
     }
    }

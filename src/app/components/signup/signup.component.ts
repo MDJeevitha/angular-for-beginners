@@ -1,80 +1,61 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import ValidateForm from '../../helpers/validateform';
 import { AuthService } from '../../services/auth.service';
-import { Route, Router } from '@angular/router';
+import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-signup',
   templateUrl: './signup.component.html',
-  styleUrl: './signup.component.scss'
+  styleUrls: ['./signup.component.scss'] // Fixed typo: styleUrl -> styleUrls
 })
 export class SignupComponent implements OnInit {
 
-  type: string = "password"
+  type: string = "password";
   isText: boolean = false;
   eyeIcon: string = "fa-eye-slash";
   signUpForm!: FormGroup;
-  // Injecting form builder and injecting auth service from services folder
 
-  constructor(private fb : FormBuilder, private auth :AuthService, private router: Router  ) { }
-
+  constructor(
+    private fb: FormBuilder, 
+    private auth: AuthService, 
+    private router: Router,
+    private toastr: ToastrService
+  ) {}
 
   ngOnInit(): void {
     this.signUpForm = this.fb.group({
       firstname: ['', Validators.required],
       lastname: ['', Validators.required],
       username: ['', Validators.required],
-      email: ['',Validators.required],
+      email: ['', [Validators.required, Validators.email]], // Added email validation
       password: ['', Validators.required],
-      
-    })
+    });
+  }
 
-   }
-
-
-  hideShowPass(){ 
+  hideShowPass(): void { 
     this.isText = !this.isText;
     this.isText ? this.eyeIcon = "fa-eye" : this.eyeIcon = "fa-eye-slash";
     this.isText ? this.type = "text" : this.type = "password";
-   }
-
-  onSignup(){
-    if(this.signUpForm.valid){
-
-      //perform logic dor signup
-
-      this.auth.signUp(this.signUpForm.value)
-      .subscribe({
-        next:(res => {
-         alert(res.message);
-         this.signUpForm.reset(); // To refresh the form
-         this.router.navigate(['login']);  // to navigate the login page using router
-        })
-        ,error:(err => {
-          alert(err?.error.message);
-        })
-    })
-      console.log(this.signUpForm.value)
-    }else{
-      // logic for throwing error
-      
-      ValidateForm.validateAllFormFields(this.signUpForm)
-      alert("your form is not valid");
-    }
   }
 
-  //   private validateAllFormFields(formGroup:FormGroup){
-  //   Object.keys(formGroup.controls).forEach(field => {
-  //      const control = formGroup.get(field);
-  //      if(control instanceof FormControl) {
-  //        control.markAsDirty({ onlySelf: true});
-  //      }
-  //      else if(control instanceof FormGroup) {
-  //        this.validateAllFormFields(control)
-  //      }
-  //   })
-  // }
-
-
+  onSignup(): void {
+    if (this.signUpForm.valid) {
+      this.auth.signUp(this.signUpForm.value)
+        .subscribe({
+          next: (res) => {
+            this.toastr.success(res.message);
+            this.signUpForm.reset();
+            this.router.navigate(['login']);
+          },
+          error: (err) => {
+            this.toastr.error(err?.error.message);
+          }
+        });
+    } else {
+      ValidateForm.validateAllFormFields(this.signUpForm);
+      this.toastr.error('Your form is invalid');
+    }
+  }
 }
